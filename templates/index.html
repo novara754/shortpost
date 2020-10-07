@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortpost</title>
+    <link rel="stylesheet" href="/static/index.css">
+</head>
+
+<body>
+    <div id="container">
+        <div class="form">
+            <form action="/new" method="post">
+                <div class="form-item">
+                    <label for="authorname">Author:</label> <br>
+                    <input type="text" name="authorname">
+                </div>
+                <div class="form-item">
+                    <label for="content">Content:</label> <br>
+                    <textarea name="content" cols="48" rows="5"></textarea>
+                </div>
+                <div class="form-item">
+                    <input type="submit" value="Submit">
+                </div>
+            </form>
+        </div>
+
+        <hr>
+
+        {{range .}}
+        <div class="post">
+            <div class="author">
+                {{.AuthorName}} says:
+            </div>
+            <div class="content">
+                {{.Content}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+</body>
+
+</html>

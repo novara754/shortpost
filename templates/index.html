@@ -14,11 +14,11 @@
             <form action="/new" method="post">
                 <div class="form-item">
                     <label for="authorname">Author:</label> <br>
-                    <input type="text" name="authorname">
+                    <input type="text" name="author" maxlength="30" required>
                 </div>
                 <div class="form-item">
                     <label for="content">Content:</label> <br>
-                    <textarea name="content" cols="48" rows="5"></textarea>
+                    <textarea name="content" cols="48" rows="5" maxlength="240" required></textarea>
                 </div>
                 <div class="form-item">
                     <input type="submit" value="Submit">

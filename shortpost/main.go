@@ -4,11 +4,21 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var templates = template.Must(template.ParseFiles("templates/index.html"))
 var config = MustLoadConfig()
 var db = MustOpenSQL(config.PostgresURL)
+
+func reverse(slice []interface{}) {
+	len := len(slice)
+	for i := 0; i < int(len/2); i++ {
+		tmp := slice[i]
+		slice[i] = slice[len-i]
+		slice[len-i] = tmp
+	}
+}
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -16,10 +26,28 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.ExecuteTemplate(w, "index.html", []Post{
-		Post{AuthorName: "Peter", Content: "This is a post."},
-		Post{AuthorName: "Peter", Content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse efficitur, purus at gravida sagittis, purus mi hendrerit enim, sit amet mattis magna quam sed orci. Nunc nisl erat, ullamcorper ut pulvinar a, fringilla sed est porttitor."},
-	})
+	posts, err := GetAllPost(db)
+	if err != nil {
+		log.Fatalf("Failed to query posts: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	templates.ExecuteTemplate(w, "index.html", posts)
+}
+
+func newHandler(w http.ResponseWriter, r *http.Request) {
+	author := strings.TrimSpace(r.FormValue("author"))
+	content := strings.TrimSpace(r.FormValue("content"))
+
+	err := InsertPost(author, content)
+	if err != nil {
+		log.Fatalf("Failed to insert post: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func main() {
@@ -29,6 +57,7 @@ func main() {
 
 	fs := http.FileServer(http.Dir("public/"))
 	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/new", newHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	log.Fatalf("Server encountered an error: %s", http.ListenAndServe(":8080", nil))
 }

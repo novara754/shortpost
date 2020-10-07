@@ -1,0 +1,3 @@
+{
+    "postgresUrl": "postgres://user:password@host/database"
+}

@@ -29,20 +29,17 @@ func reverse(slice []interface{}) {
 	}
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request, session *sessions.Session) error {
 	if r.URL.Path != "/" {
 		http.Redirect(w, r, "/", http.StatusFound)
-		return
+		return nil
 	}
 
 	posts, err := GetAllPost(db)
 	if err != nil {
-		log.Fatalf("Failed to query posts: %s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
-	session := sess.Start(w, r)
 	var currentUser *User = nil
 	if currentUserID, err := session.GetInt64("current-user-id"); err == nil {
 		currentUser, err = GetUserByID(db, currentUserID)
@@ -56,30 +53,28 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		CurrentUser: currentUser,
 	}
 
-	templates.ExecuteTemplate(w, "index.html", data)
+	return templates.ExecuteTemplate(w, "index.html", data)
 }
 
-func newPostHandler(w http.ResponseWriter, r *http.Request) {
-	authorID, err := sess.Start(w, r).GetInt64("current-user-id")
+func newPostHandler(w http.ResponseWriter, r *http.Request, session *sessions.Session) error {
+	authorID, err := session.GetInt64("current-user-id")
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
-		return
+		return nil
 	}
 
 	content := strings.TrimSpace(r.FormValue("content"))
 	err = InsertPost(authorID, content)
 	if err != nil {
-		log.Fatalf("Failed to insert post: %s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
+
+	return nil
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	session := sess.Start(w, r)
-
+func loginHandler(w http.ResponseWriter, r *http.Request, session *sessions.Session) error {
 	if r.Method == "GET" {
 		if session.Get("current-user-id") != nil {
 			http.Redirect(w, r, "/", http.StatusFound)
@@ -101,23 +96,23 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err == sql.ErrNoRows || err == bcrypt.ErrMismatchedHashAndPassword {
 			http.Redirect(w, r, "/login?error=1", http.StatusUnauthorized)
-			return
+			return nil
 		}
 
 		if err != nil {
 			log.Fatalf("Failed to authenticate user: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return nil
 		}
 
 		session.Set("current-user-id", user.ID)
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
+
+	return nil
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) {
-	session := sess.Start(w, r)
-
+func registerHandler(w http.ResponseWriter, r *http.Request, session *sessions.Session) error {
 	if r.Method == "GET" {
 		if session.Get("current-user-id") != nil {
 			http.Redirect(w, r, "/", http.StatusFound)
@@ -137,23 +132,34 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 		user, err := InsertUser(username, password)
 		if err != nil {
-			log.Fatalf("Failed to insert user: %s", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return err
 		}
 
 		session.Set("current-user-id", user.ID)
 
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
+
+	return nil
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	session := sess.Start(w, r)
+func logoutHandler(w http.ResponseWriter, r *http.Request, session *sessions.Session) error {
 	if session.Get("current-user-id") != nil {
 		session.Destroy()
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
+
+	return nil
+}
+
+func makeHandler(hn func(w http.ResponseWriter, r *http.Request, session *sessions.Session) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session := sess.Start(w, r)
+		if err := hn(w, r, session); err != nil {
+			log.Fatal(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
 }
 
 func main() {
@@ -166,11 +172,11 @@ func main() {
 	}
 
 	fs := http.FileServer(http.Dir("public/"))
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/new-post", newPostHandler)
-	http.HandleFunc("/register", registerHandler)
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/logout", logoutHandler)
+	http.HandleFunc("/", makeHandler(indexHandler))
+	http.HandleFunc("/new-post", makeHandler(newPostHandler))
+	http.HandleFunc("/register", makeHandler(registerHandler))
+	http.HandleFunc("/login", makeHandler(loginHandler))
+	http.HandleFunc("/logout", makeHandler(logoutHandler))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	log.Fatalf("Server encountered an error: %s", http.ListenAndServe(":8080", nil))
 }

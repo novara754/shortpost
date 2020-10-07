@@ -100,9 +100,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, session *sessions.Sess
 		}
 
 		if err != nil {
-			log.Fatalf("Failed to authenticate user: %s", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return nil
+			return err
 		}
 
 		session.Set("current-user-id", user.ID)
@@ -166,10 +164,12 @@ func main() {
 	if err := CreateUserTable(db); err != nil {
 		log.Fatalf("Failed to create users table: %s", err.Error())
 	}
+	log.Println("Created users table.")
 
 	if err := CreatePostTable(db); err != nil {
 		log.Fatalf("Failed to create posts table: %s", err.Error())
 	}
+	log.Println("Created posts table.")
 
 	fs := http.FileServer(http.Dir("public/"))
 	http.HandleFunc("/", makeHandler(indexHandler))
@@ -178,5 +178,6 @@ func main() {
 	http.HandleFunc("/login", makeHandler(loginHandler))
 	http.HandleFunc("/logout", makeHandler(logoutHandler))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	log.Println("Listening on port 8080...")
 	log.Fatalf("Server encountered an error: %s", http.ListenAndServe(":8080", nil))
 }

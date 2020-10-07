@@ -1,3 +1,4 @@
 {
-    "postgresUrl": "postgres://user:password@host/database"
+    "postgresUrl": "postgres://user:password@host/database",
+    "port": "8080"
 }

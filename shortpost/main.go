@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -178,6 +179,6 @@ func main() {
 	http.HandleFunc("/login", makeHandler(loginHandler))
 	http.HandleFunc("/logout", makeHandler(logoutHandler))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
-	log.Println("Listening on port 8080...")
-	log.Fatalf("Server encountered an error: %s", http.ListenAndServe(":8080", nil))
+	log.Printf("Listening on port %s...\n", config.Port)
+	log.Fatalf("Server encountered an error: %s", http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil))
 }

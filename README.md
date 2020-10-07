@@ -11,9 +11,9 @@ generate an executable with the same name.
 
 In order for the executable to work you need to create a file named `config.json`
 with the same struct as the `config.json.sample`. Fill in the URL
-for your instance of postgres and you're good to go!
+for your instance of postgres, the desired port and you're good to go!
 
-The server will run on port `8080`.
+The server will then listen on the configured port.
 
 ## License
 

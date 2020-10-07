@@ -10,6 +10,7 @@ import (
 // for the program.
 type Config struct {
 	PostgresURL string `json:"postgresURL"`
+	Port        string `json:"port"`
 }
 
 // MustLoadConfig loads configuration data from `config.json`.

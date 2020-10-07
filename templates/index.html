@@ -9,13 +9,19 @@
 </head>
 
 <body>
+    <nav>
+        {{if .CurrentUser}}
+        <span>Logged in as: {{.CurrentUser.Username}}</span>
+        <span><a href="/logout">Log Out</a></span>
+        {{else}}
+        <span><a href="/login">Log In</a></span>
+        <span><a href="/register">Register</a></span>
+        {{end}}
+    </nav>
+
     <div id="container">
         <div class="form">
-            <form action="/new" method="post">
-                <div class="form-item">
-                    <label for="authorname">Author:</label> <br>
-                    <input type="text" name="author" maxlength="30" required>
-                </div>
+            <form action="/new-post" method="post">
                 <div class="form-item">
                     <label for="content">Content:</label> <br>
                     <textarea name="content" cols="48" rows="5" maxlength="240" required></textarea>
@@ -28,10 +34,10 @@
 
         <hr>
 
-        {{range .}}
+        {{range .Posts}}
         <div class="post">
             <div class="author">
-                {{.AuthorName}} says:
+                {{.Author.Username}} says:
             </div>
             <div class="content">
                 {{.Content}}

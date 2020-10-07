@@ -12,6 +12,7 @@ body {
 }
 
 input[type=text],
+input[type=password],
 textarea {
     width: 500px;
     border: 1px solid #bbb;

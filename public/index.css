@@ -11,6 +11,27 @@ body {
     font-family: 'Roboto';
 }
 
+nav {
+    font-size: 1.1rem;
+    background-color: #fff;
+    height: 50px;
+    line-height: 50px;
+}
+
+nav > span {
+    margin-left: 20px;
+}
+
+nav > span:hover {
+    text-decoration: underline;
+    margin-left: 20px;
+}
+
+nav > span > a {
+    color: #000;
+    text-decoration: none;
+}
+
 input[type=text],
 input[type=password],
 textarea {

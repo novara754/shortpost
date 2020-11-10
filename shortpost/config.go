@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"os"
 )
@@ -9,24 +8,24 @@ import (
 // Config is a structure to contain configuration
 // for the program.
 type Config struct {
-	PostgresURL string `json:"postgresURL"`
-	Port        string `json:"port"`
+	Port        string
+	PostgresURL string
 }
 
-// MustLoadConfig loads configuration data from `config.json`.
-// Panics on error.
-func MustLoadConfig() (config *Config) {
-	file, err := os.Open("config.json")
-	if err != nil {
-		log.Panicf("Failed to read config: %s", err.Error())
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&config)
-	if err != nil {
-		log.Panicf("Failed to parse config: %s", err.Error())
+// MustLoadConfig loads configuration data from environment variables.
+// Panics on missing values.
+func MustLoadConfig() Config {
+	config := Config{
+		Port:        os.Getenv("PORT"),
+		PostgresURL: os.Getenv("POSTGRES_URL"),
 	}
 
-	return
+	if config.Port == "" {
+		log.Panicf("Empty PORT variable")
+	}
+	if config.PostgresURL == "" {
+		log.Panicf("Empty POSTGRES_URL variable")
+	}
+
+	return config
 }

@@ -1,0 +1,9 @@
+# Git
+.git/
+.gitignore
+
+# Project
+config.json.sample
+config.json
+screenshot.png
+docker-compose.yml

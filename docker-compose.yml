@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  web:
+    build: .
+    environment:
+      PORT: 80
+      POSTGRES_URL: "postgres://shortpost:shortpost@db:5432/shortpost?sslmode=disable"
+    ports:
+      - "8080:80" # Change 8080 to the desired port.
+    links:
+      - db
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: shortpost
+      POSTGRES_PASSWORD: shortpost
+      POSTGRES_DB: shortpost
+    ports:
+      - "5432:5432"
